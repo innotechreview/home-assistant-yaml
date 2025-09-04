@@ -15,8 +15,7 @@ Ils sont écrits en **YAML**, prêts à être importés ou adaptés selon vos be
 
 ## 🚀 Importer un blueprint
 
-1. Copiez l’URL **Raw** du fichier YAML (exemple ci-dessous).  https://raw.githubusercontent.com/
-<TON_USER>/<TON_REPO>/main/blueprints/automation/notif_oui_non_relance.yaml
+1. Copiez l’URL **Raw** du fichier YAML (exemple ci-dessous).  https://raw.githubusercontent.com/innotechreview/home-assistant-yaml/main/blueprints/automation/notif_oui_non_relance.yaml
 2. Dans Home Assistant → **Paramètres → Automatisations & Scènes → Blueprints → Importer Blueprint**.  
 3. Collez l’URL et cliquez **Aperçu → Importer**.  
 4. Créez une nouvelle automatisation à partir du blueprint importé.
