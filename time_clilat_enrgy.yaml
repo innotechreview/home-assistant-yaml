@@ -1,0 +1,105 @@
+# Empile plusieurs cartes sans bordures entre elles
+type: custom:stack-in-card
+title: null            # Pas de titre (tu laisses la carte “lisse”)
+mode: vertical         # Empilement vertical
+cards:
+
+  # ---- Carte Météo (aujourd'hui) ----
+  - type: custom:clock-weather-card     # Carte météo/horloge
+    hide_today_section: false           # Affiche la section “aujourd’hui”
+    hide_forecast_section: true         # Masque la prévision multi-jours (tu l'as en bas)
+    entity: weather.forecast_maison     # Entité météo (Weather)
+    animated_icon: true                 # Icônes animées
+    show_humidity: true                 # Affiche l’humidité
+    date_pattern: EEEE d MMMM           # Format de date (ex: lundi 17 octobre)
+    aqi_sensor: sensor.air_quality_index # Capteur AQI si dispo (sinon retire cette ligne)
+    card_mod:
+      style: |
+        ha-card {                       # Supprime la bordure de la carte
+          border: none;
+        }
+
+  # ---- Météo horaire (12 prochaines heures) ----
+  - type: custom:hourly-weather
+    entity: weather.forecast_maison
+    label_spacing: "5"                  # Espacement des labels (texte)
+    num_segments: "12"                  # Nombre d’heures affichées
+    icons: 1                            # Affiche les icônes
+    name: ""                            # Pas de titre
+    show_wind: "false"                  # Masque le vent
+    show_date: "false"                  # Masque la date
+    show_precipitation_amounts: false   # Masque le volume des précipitations
+    show_precipitation_probability: false # Masque la probabilité de pluie
+    hide_temperatures: true             # Masque les températures (tu ne montres que l’état)
+    round_temperatures: true            # (Sans effet si températures masquées)
+    colors:                             # Palette personnalisée par condition
+      clear-night: "#2e3440"
+      cloudy: "#4c566a"
+      partlycloudy: "#b2b7bf"
+      rainy: "#5e81ac"
+      sunny: "#ebcb8b"
+    card_mod:
+      style: |
+        ha-card {
+          border: none;                 # Pas de bordure
+        }
+
+  # ---- Carte Météo (conditions actuelles compactes) ----
+  - type: custom:clock-weather-card
+    hide_today_section: 1               # Masque la section “aujourd’hui” (vue compacte)
+    entity: weather.forecast_maison
+    animated_icon: true
+    aqi_sensor: sensor.air_quality_index
+    card_mod:
+      style: |
+        ha-card {
+          border: none;
+        }
+
+  # ---- Séparateur / Titre de section Énergie ----
+  - type: custom:bubble-card
+    card_type: separator                # Affiche un séparateur stylé
+    icon: mdi:currency-usd
+    name: Consommation d'énergie        # Titre de section (orthographe corrigée)
+
+  # ---- Graphique coûts Électricité & Eau (variation quotidienne sur 30 jours) ----
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      show_states: true                 # Affiche la dernière valeur dans l’en-tête
+      colorize_states: true             # Couleur = série correspondante
+    graph_span: 30d                     # Fenêtre totale du graphique
+    span:
+      start: day                        # Aligne sur le début du jour
+      offset: "-30d"                    # Regarde sur les 30 derniers jours
+    series:
+      # Électricité : variation journalière de coût (statistiques → change)
+      - entity: sensor.compteur_d_energie_linky_base_cost
+        name: Electricité
+        type: line
+        color: "#FFC300"
+        statistics:
+          type: change                  # Variation (delta) par période
+          period: day                   # Période = jour
+
+      # Eau : variation journalière de coût
+      - entity: sensor.veolia_last_index_cost
+        name: Eau
+        type: line
+        color: "#038cfc"
+        statistics:
+          type: change
+          period: day
+
+    apex_config:
+      chart:
+        height: 150px                   # Hauteur compacte
+      grid:
+        yaxis:
+          lines:
+            show: false                 # Grille Y discrète
+    card_mod:
+      style: |
+        ha-card {
+          border: none;                 # Pas de bordure
+        }
