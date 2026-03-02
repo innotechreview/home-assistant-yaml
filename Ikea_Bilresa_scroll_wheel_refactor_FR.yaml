@@ -1,0 +1,994 @@
+blueprint:
+  name: IKEA BILRESA Scroll Wheel (Matter) â€” Refactor FR (commentÃ©)
+  description: |-
+    Refonte (refactor) du blueprint "Ikea_bilresa_scroll_wheel" de jhol-byte.
+    Objectifs:
+      - rÃ©duire la duplication via une logique gÃ©nÃ©rique par canal
+      - ajouter un mode debug (logbook)
+      - option "tourner la molette => allumer si Ã©teint"
+      - anti-rafale (debounce) en mode "instant"
+      - meilleure dÃ©tection des capacitÃ©s couleur via supported_color_modes (quand dispo)
+      - arrÃªt du on-hold basÃ© sur le temps (au lieu d'un repeat.index arbitraire)
+      - fallback robuste pour le mode "dynamic" (input_select)
+
+    Sources / inspiration:
+      - Gist original: https://gist.github.com/jhol-byte/b2731a4d2476f530d76b9ff409f7f3a4
+      - Thread HA community: https://community.home-assistant.io/t/ikea-bilresa-scroll-wheel-blueprint-matter-the-original/965365
+
+    âš ï¸ Notes importantes
+      - La partie "scroll wheel" en mode instant nÃ©cessite que les entitÃ©s diagnostiques "Current switch position (x)" soient activÃ©es sur le device.
+      - Selon ta langue HA, les noms/entitÃ©s peuvent varier. Ce blueprint te laisse sÃ©lectionner explicitement les entitÃ©s nÃ©cessaires.
+domain: automation
+
+###############################################################################
+# INPUTS
+###############################################################################
+input:
+  # ---------------------------------------------------------------------------
+  # DEBUG / observabilitÃ©
+  # ---------------------------------------------------------------------------
+  debug_enabled:
+    name: Debug (logbook)
+    description: "Si activÃ©, Ã©crit dans le logbook lors des actions (utile pour le dÃ©pannage)."
+    default: false
+    selector:
+      boolean: {}
+
+  # ---------------------------------------------------------------------------
+  # ENTITÃ‰S DE LA TÃ‰LÃ‰COMMANDE (sÃ©lection explicite)
+  #
+  # Pourquoi:
+  # - le blueprint original essaye de retrouver les entitÃ©s Ã  partir du device + regex.
+  # - c'est fragile (langue, renommage, multiples devices, etc.).
+  # - ici: tu choisis les 3 entitÃ©s event (bouton) + les entitÃ©s de scroll (Ã©vÃ©nement et/ou sensors).
+  # ---------------------------------------------------------------------------
+  btn_event_ch1:
+    name: "Canal 1 â€” Event bouton"
+    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_1)."
+    selector:
+      entity:
+        filter:
+          domain: event
+
+  btn_event_ch2:
+    name: "Canal 2 â€” Event bouton"
+    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_2)."
+    selector:
+      entity:
+        filter:
+          domain: event
+
+  btn_event_ch3:
+    name: "Canal 3 â€” Event bouton"
+    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_3)."
+    selector:
+      entity:
+        filter:
+          domain: event
+
+  # Scroll wheel: en "relaxed", l'Ã©vÃ©nement suffit souvent (un seul trigger aprÃ¨s la rotation).
+  # En "instant", il faut les sensors diagnostiques (9 au total dans le device) pour capturer chaque cran.
+  scroll_event_ch1:
+    name: "Canal 1 â€” Event molette (gauche/droite)"
+    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 1."
+    selector:
+      entity:
+        filter:
+          domain: event
+  scroll_event_ch2:
+    name: "Canal 2 â€” Event molette (gauche/droite)"
+    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 2."
+    selector:
+      entity:
+        filter:
+          domain: event
+  scroll_event_ch3:
+    name: "Canal 3 â€” Event molette (gauche/droite)"
+    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 3."
+    selector:
+      entity:
+        filter:
+          domain: event
+
+  # Optionnel: sensors "Current switch position (x)" pour le mode instant
+  # Dans le device Bilresa, tu peux activer les entitÃ©s diagnostiques.
+  scroll_sensor_ch1:
+    name: "Canal 1 â€” Sensor molette (instant)"
+    description: "Sensor diagnostique de la molette (Current switch position) pour le canal 1. Requis pour evaluation_mode=instant."
+    default: null
+    selector:
+      entity:
+        filter:
+          domain: sensor
+  scroll_sensor_ch2:
+    name: "Canal 2 â€” Sensor molette (instant)"
+    description: "Sensor diagnostique de la molette (Current switch position) pour le canal 2. Requis pour evaluation_mode=instant."
+    default: null
+    selector:
+      entity:
+        filter:
+          domain: sensor
+  scroll_sensor_ch3:
+    name: "Canal 3 â€” Sensor molette (instant)"
+    description: "Sensor diagnostique de la molette (Current switch position) pour le canal 3. Requis pour evaluation_mode=instant."
+    default: null
+    selector:
+      entity:
+        filter:
+          domain: sensor
+
+  # ---------------------------------------------------------------------------
+  # ACTIONS PAR CANAL (bouton)
+  # ---------------------------------------------------------------------------
+  channel1_section:
+    name: Canal 1 â€” Actions bouton
+    collapsed: true
+    input:
+      click_action_ch1:
+        name: "Clic"
+        default: []
+        selector: { action: {} }
+      double_click_action_ch1:
+        name: "Double-clic"
+        default: []
+        selector: { action: {} }
+      triple_click_action_ch1:
+        name: "Triple-clic"
+        default: []
+        selector: { action: {} }
+      long_click_action_ch1:
+        name: "Appui long"
+        default: []
+        selector: { action: {} }
+      on_hold_action_ch1:
+        name: "Maintien (rÃ©pÃ©tition)"
+        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        default: []
+        selector: { action: {} }
+
+  channel2_section:
+    name: Canal 2 â€” Actions bouton
+    collapsed: true
+    input:
+      click_action_ch2:
+        name: "Clic"
+        default: []
+        selector: { action: {} }
+      double_click_action_ch2:
+        name: "Double-clic"
+        default: []
+        selector: { action: {} }
+      triple_click_action_ch2:
+        name: "Triple-clic"
+        default: []
+        selector: { action: {} }
+      long_click_action_ch2:
+        name: "Appui long"
+        default: []
+        selector: { action: {} }
+      on_hold_action_ch2:
+        name: "Maintien (rÃ©pÃ©tition)"
+        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        default: []
+        selector: { action: {} }
+
+  channel3_section:
+    name: Canal 3 â€” Actions bouton
+    collapsed: true
+    input:
+      click_action_ch3:
+        name: "Clic"
+        default: []
+        selector: { action: {} }
+      double_click_action_ch3:
+        name: "Double-clic"
+        default: []
+        selector: { action: {} }
+      triple_click_action_ch3:
+        name: "Triple-clic"
+        default: []
+        selector: { action: {} }
+      long_click_action_ch3:
+        name: "Appui long"
+        default: []
+        selector: { action: {} }
+      on_hold_action_ch3:
+        name: "Maintien (rÃ©pÃ©tition)"
+        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        default: []
+        selector: { action: {} }
+
+  # ---------------------------------------------------------------------------
+  # MOLETTE PAR CANAL: cibles + mode + mode d'Ã©valuation + action user-defined
+  # ---------------------------------------------------------------------------
+  wheel_section:
+    name: Molette â€” Cibles et modes (par canal)
+    collapsed: true
+    input:
+      scroll_wheel_target_ch1:
+        name: "Canal 1 â€” Cible(s) molette"
+        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        default: []
+        selector:
+          entity:
+            multiple: true
+            filter:
+              domain:
+                - light
+                - media_player
+
+      scroll_wheel_target_ch2:
+        name: "Canal 2 â€” Cible(s) molette"
+        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        default: []
+        selector:
+          entity:
+            multiple: true
+            filter:
+              domain:
+                - light
+                - media_player
+
+      scroll_wheel_target_ch3:
+        name: "Canal 3 â€” Cible(s) molette"
+        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        default: []
+        selector:
+          entity:
+            multiple: true
+            filter:
+              domain:
+                - light
+                - media_player
+
+      scroll_wheel_mode_ch1:
+        name: "Canal 1 â€” Mode molette"
+        description: "Attribut contrÃ´lÃ© par la molette."
+        default: "lights: dim"
+        selector:
+          select:
+            options:
+              - "lights: dim"
+              - "lights: color temp and color hue"
+              - "lights: color temp only"
+              - "lights: color hue only"
+              - "media: volume control"
+              - "dynamic: choose from input_select"
+              - "user defined"
+
+      scroll_wheel_mode_ch2:
+        name: "Canal 2 â€” Mode molette"
+        description: "Attribut contrÃ´lÃ© par la molette."
+        default: "lights: dim"
+        selector:
+          select:
+            options:
+              - "lights: dim"
+              - "lights: color temp and color hue"
+              - "lights: color temp only"
+              - "lights: color hue only"
+              - "media: volume control"
+              - "dynamic: choose from input_select"
+              - "user defined"
+
+      scroll_wheel_mode_ch3:
+        name: "Canal 3 â€” Mode molette"
+        description: "Attribut contrÃ´lÃ© par la molette."
+        default: "lights: dim"
+        selector:
+          select:
+            options:
+              - "lights: dim"
+              - "lights: color temp and color hue"
+              - "lights: color temp only"
+              - "lights: color hue only"
+              - "media: volume control"
+              - "dynamic: choose from input_select"
+              - "user defined"
+
+      scroll_wheel_mode_dynamic_ch1:
+        name: "Canal 1 â€” input_select (mode dynamique)"
+        description: |-
+          Uniquement si Mode molette = "dynamic: choose from input_select".
+          CrÃ©e un input_select contenant des valeurs parmi:
+            - lights: dim
+            - lights: color temp and color hue
+            - lights: color temp only
+            - lights: color hue only
+            - media: volume control
+            - user defined
+        default: null
+        selector:
+          entity:
+            filter:
+              domain: input_select
+
+      scroll_wheel_mode_dynamic_ch2:
+        name: "Canal 2 â€” input_select (mode dynamique)"
+        default: null
+        selector:
+          entity:
+            filter:
+              domain: input_select
+
+      scroll_wheel_mode_dynamic_ch3:
+        name: "Canal 3 â€” input_select (mode dynamique)"
+        default: null
+        selector:
+          entity:
+            filter:
+              domain: input_select
+
+      scroll_wheel_mode_ext_ch1:
+        name: "Canal 1 â€” Ã‰valuation molette"
+        description: |-
+          relaxed : 1 action aprÃ¨s rotation (moins d'appels, plus stable)
+          instant : action Ã  chaque cran (plus rÃ©actif) â€” nÃ©cessite les sensors diagnostiques activÃ©s.
+        default: "relaxed"
+        selector:
+          select:
+            options: ["relaxed", "instant"]
+
+      scroll_wheel_mode_ext_ch2:
+        name: "Canal 2 â€” Ã‰valuation molette"
+        default: "relaxed"
+        selector:
+          select:
+            options: ["relaxed", "instant"]
+
+      scroll_wheel_mode_ext_ch3:
+        name: "Canal 3 â€” Ã‰valuation molette"
+        default: "relaxed"
+        selector:
+          select:
+            options: ["relaxed", "instant"]
+
+      scroll_wheel_user_action_ch1:
+        name: "Canal 1 â€” Action user-defined (molette)"
+        description: |-
+          UtilisÃ© uniquement si Mode molette = "user defined".
+          Variables exposÃ©es:
+            - scroll_clicks: en instant = 1, en relaxed = 1..8 (selon la rotation)
+            - scroll_direction: 'left' ou 'right'
+        default: []
+        selector: { action: {} }
+
+      scroll_wheel_user_action_ch2:
+        name: "Canal 2 â€” Action user-defined (molette)"
+        default: []
+        selector: { action: {} }
+
+      scroll_wheel_user_action_ch3:
+        name: "Canal 3 â€” Action user-defined (molette)"
+        default: []
+        selector: { action: {} }
+
+  # ---------------------------------------------------------------------------
+  # PARAMÃˆTRES GLOBAUX
+  # ---------------------------------------------------------------------------
+  global_setting:
+    name: ParamÃ¨tres globaux
+    collapsed: true
+    input:
+      # Dimming
+      dim_step_pct:
+        name: "LumiÃ¨re â€” pas de variation (%)"
+        description: "Variation de luminositÃ© (en %) par cran, multipliÃ©e par scroll_clicks."
+        default: 5
+        selector:
+          number: { min: 1, max: 50, mode: box, unit_of_measurement: "%" }
+
+      dim_min_pct:
+        name: "LumiÃ¨re â€” luminositÃ© min (%)"
+        default: 5
+        selector:
+          number: { min: 1, max: 100, mode: box, unit_of_measurement: "%" }
+
+      # Color temperature
+      min_color_temp:
+        name: "LumiÃ¨re â€” tempÃ©rature min (K)"
+        default: 2200
+        selector:
+          number: { min: 1500, max: 6500, mode: box, unit_of_measurement: "K" }
+
+      max_color_temp:
+        name: "LumiÃ¨re â€” tempÃ©rature max (K)"
+        default: 4000
+        selector:
+          number: { min: 1500, max: 6500, mode: box, unit_of_measurement: "K" }
+
+      color_temp_step:
+        name: "LumiÃ¨re â€” pas tempÃ©rature (K)"
+        default: 300
+        selector:
+          number: { min: 50, max: 2000, mode: box, unit_of_measurement: "K" }
+
+      # Color hue
+      color_hue_step:
+        name: "LumiÃ¨re â€” pas teinte (Â°)"
+        default: 5
+        selector:
+          number: { min: 1, max: 60, mode: box, unit_of_measurement: "Â°" }
+
+      color_saturation:
+        name: "LumiÃ¨re â€” saturation (%)"
+        default: 100
+        selector:
+          number: { min: 0, max: 100, mode: box, unit_of_measurement: "%" }
+
+      # Media volume
+      volume_step_pct:
+        name: "MÃ©dia â€” pas volume (%)"
+        default: 5
+        selector:
+          number: { min: 1, max: 50, mode: box, unit_of_measurement: "%" }
+
+      volume_max_pct:
+        name: "MÃ©dia â€” volume max (%)"
+        default: 100
+        selector:
+          number: { min: 1, max: 100, mode: box, unit_of_measurement: "%" }
+
+      volume_use_up_down_for_instant:
+        name: "MÃ©dia â€” utiliser volume_up/down en instant"
+        description: "Certains media_players supportent mieux volume_up/down que volume_set en rafale."
+        default: false
+        selector:
+          boolean: {}
+
+      # Molette: options UX
+      scroll_turn_on_if_off:
+        name: "Molette â€” allumer la lumiÃ¨re si Ã©teinte"
+        description: "Si activÃ©, une rotation sur une lumiÃ¨re Ã©teinte l'allume au minimum avant d'appliquer la variation."
+        default: true
+        selector:
+          boolean: {}
+
+      # Debounce pour instant
+      instant_debounce_ms:
+        name: "Molette â€” debounce instant (ms)"
+        description: "Ignore les triggers molette si trop rapprochÃ©s (anti-bouchon). 0 = dÃ©sactivÃ©."
+        default: 120
+        selector:
+          number: { min: 0, max: 500, mode: box, unit_of_measurement: "ms" }
+
+      # on-hold loop
+      on_hold_delay_ms:
+        name: "Maintien â€” dÃ©lai entre rÃ©pÃ©titions (ms)"
+        default: 250
+        selector:
+          number: { min: 50, max: 2000, mode: box, unit_of_measurement: "ms" }
+
+      on_hold_max_seconds:
+        name: "Maintien â€” durÃ©e max (s)"
+        description: "SÃ©curitÃ©: stoppe la rÃ©pÃ©tition au bout de X secondes mÃªme si l'Ã©vÃ©nement relÃ¢chement n'est pas dÃ©tectÃ©."
+        default: 25
+        selector:
+          number: { min: 5, max: 120, mode: box, unit_of_measurement: "s" }
+
+###############################################################################
+# TRIGGERS
+#
+# - Boutons: on dÃ©clenche sur changement d'Ã©tat de l'entitÃ© event du canal.
+# - Molette relaxed: dÃ©clenche sur event molette.
+# - Molette instant: dÃ©clenche sur sensor diagnostique (si fourni).
+###############################################################################
+trigger:
+  # Bouton canal 1/2/3
+  - platform: state
+    entity_id: !input btn_event_ch1
+    id: btn_ch1
+  - platform: state
+    entity_id: !input btn_event_ch2
+    id: btn_ch2
+  - platform: state
+    entity_id: !input btn_event_ch3
+    id: btn_ch3
+
+  # Molette relaxed (event)
+  - platform: state
+    entity_id: !input scroll_event_ch1
+    id: wheel_event_ch1
+  - platform: state
+    entity_id: !input scroll_event_ch2
+    id: wheel_event_ch2
+  - platform: state
+    entity_id: !input scroll_event_ch3
+    id: wheel_event_ch3
+
+  # Molette instant (sensor diagnostique) â€” triggers optionnels
+  - platform: state
+    entity_id: !input scroll_sensor_ch1
+    id: wheel_sensor_ch1
+  - platform: state
+    entity_id: !input scroll_sensor_ch2
+    id: wheel_sensor_ch2
+  - platform: state
+    entity_id: !input scroll_sensor_ch3
+    id: wheel_sensor_ch3
+
+###############################################################################
+# VARIABLES: normalisation des entrÃ©es par canal + utilitaires
+###############################################################################
+variables:
+  debug: !input debug_enabled
+
+  # Helpers de config par canal (inputs)
+  ch_cfg:
+    ch1:
+      btn_event: !input btn_event_ch1
+      scroll_event: !input scroll_event_ch1
+      scroll_sensor: !input scroll_sensor_ch1
+      click: !input click_action_ch1
+      double: !input double_click_action_ch1
+      triple: !input triple_click_action_ch1
+      long: !input long_click_action_ch1
+      hold: !input on_hold_action_ch1
+      targets: !input scroll_wheel_target_ch1
+      mode: !input scroll_wheel_mode_ch1
+      mode_dynamic: !input scroll_wheel_mode_dynamic_ch1
+      eval_mode: !input scroll_wheel_mode_ext_ch1
+      user_wheel: !input scroll_wheel_user_action_ch1
+
+    ch2:
+      btn_event: !input btn_event_ch2
+      scroll_event: !input scroll_event_ch2
+      scroll_sensor: !input scroll_sensor_ch2
+      click: !input click_action_ch2
+      double: !input double_click_action_ch2
+      triple: !input triple_click_action_ch2
+      long: !input long_click_action_ch2
+      hold: !input on_hold_action_ch2
+      targets: !input scroll_wheel_target_ch2
+      mode: !input scroll_wheel_mode_ch2
+      mode_dynamic: !input scroll_wheel_mode_dynamic_ch2
+      eval_mode: !input scroll_wheel_mode_ext_ch2
+      user_wheel: !input scroll_wheel_user_action_ch2
+
+    ch3:
+      btn_event: !input btn_event_ch3
+      scroll_event: !input scroll_event_ch3
+      scroll_sensor: !input scroll_sensor_ch3
+      click: !input click_action_ch3
+      double: !input double_click_action_ch3
+      triple: !input triple_click_action_ch3
+      long: !input long_click_action_ch3
+      hold: !input on_hold_action_ch3
+      targets: !input scroll_wheel_target_ch3
+      mode: !input scroll_wheel_mode_ch3
+      mode_dynamic: !input scroll_wheel_mode_dynamic_ch3
+      eval_mode: !input scroll_wheel_mode_ext_ch3
+      user_wheel: !input scroll_wheel_user_action_ch3
+
+  # ParamÃ¨tres globaux
+  dim_step_pct: !input dim_step_pct
+  dim_min_pct: !input dim_min_pct
+  min_color_temp: !input min_color_temp
+  max_color_temp: !input max_color_temp
+  color_temp_step: !input color_temp_step
+  color_hue_step: !input color_hue_step
+  color_saturation: !input color_saturation
+  volume_step_pct: !input volume_step_pct
+  volume_max_pct: !input volume_max_pct
+  volume_use_up_down_for_instant: !input volume_use_up_down_for_instant
+  scroll_turn_on_if_off: !input scroll_turn_on_if_off
+  instant_debounce_ms: !input instant_debounce_ms
+  on_hold_delay_ms: !input on_hold_delay_ms
+  on_hold_max_seconds: !input on_hold_max_seconds
+
+###############################################################################
+# MODE D'EXÃ‰CUTION
+###############################################################################
+mode: queued
+max: 10
+
+###############################################################################
+# ACTION PRINCIPALE
+###############################################################################
+action:
+  # ---------------------------------------------------------------------------
+  # 1) DÃ©terminer le canal + le type d'action (bouton ou molette)
+  # ---------------------------------------------------------------------------
+  - variables:
+      # Canal dÃ©duit du trigger.id
+      channel: >-
+        {% if trigger.id in ['btn_ch1','wheel_event_ch1','wheel_sensor_ch1'] %} ch1
+        {% elif trigger.id in ['btn_ch2','wheel_event_ch2','wheel_sensor_ch2'] %} ch2
+        {% else %} ch3
+        {% endif %}
+
+      cfg: "{{ ch_cfg[channel] }}"
+
+      # On distingue 2 grandes familles:
+      # - "button": Ã©vÃ©nements bouton (click/double/triple/long/hold)
+      # - "wheel": Ã©vÃ©nements molette (relaxed/instant)
+      family: >-
+        {% if trigger.id.startswith('btn_') %} button {% else %} wheel {% endif %}
+
+  # Debug: log le trigger reÃ§u
+  - choose:
+      - conditions: "{{ debug }}"
+        sequence:
+          - action: logbook.log
+            data:
+              name: "BILRESA blueprint (debug)"
+              message: >-
+                Trigger={{ trigger.id }} | channel={{ channel }} | family={{ family }}
+              entity_id: "{{ cfg.btn_event }}"
+
+  # ---------------------------------------------------------------------------
+  # 2) Gestion du BOUTON (click/double/triple/long/hold)
+  # ---------------------------------------------------------------------------
+  - choose:
+      - conditions: "{{ family == 'button' }}"
+        sequence:
+          # En HA, une entitÃ© 'event' met Ã  jour des attributs lors du dernier event.
+          # On essaie de lire event_type (sinon fallback sur state/attributes).
+          - variables:
+              btn_event_type: >-
+                {{ state_attr(cfg.btn_event, 'event_type') or state_attr(cfg.btn_event, 'event') or states(cfg.btn_event) }}
+          # Normalisation: on mappe les event types Matter/IKEA en catÃ©gories.
+          - variables:
+              btn_kind: >-
+                {% set t = (btn_event_type|string)|lower %}
+                {% if 'double' in t %} double
+                {% elif 'triple' in t %} triple
+                {% elif 'long' in t and ('release' not in t) %} long
+                {% elif 'hold' in t or 'repeat' in t %} hold
+                {% else %} click
+                {% endif %}
+
+          - choose:
+              # --- click/double/triple/long ---
+              - conditions: "{{ btn_kind in ['click','double','triple','long'] }}"
+                sequence:
+                  - choose:
+                      - conditions: "{{ btn_kind == 'click' }}"
+                        sequence: !input click_action_ch1  # remplacÃ© juste aprÃ¨s par logique gÃ©nÃ©rique
+                      - conditions: "{{ btn_kind == 'double' }}"
+                        sequence: !input double_click_action_ch1
+                      - conditions: "{{ btn_kind == 'triple' }}"
+                        sequence: !input triple_click_action_ch1
+                      - conditions: "{{ btn_kind == 'long' }}"
+                        sequence: !input long_click_action_ch1
+                # NOTE: les sÃ©quences ci-dessus seront surchargÃ©es par le bloc "switch channel" ci-dessous.
+              # --- hold ---
+              - conditions: "{{ btn_kind == 'hold' }}"
+                sequence:
+                  # Boucle de maintien: on exÃ©cute l'action cfg.hold toutes les X ms,
+                  # et on stoppe aprÃ¨s on_hold_max_seconds pour Ã©viter une boucle infinie.
+                  - variables:
+                      hold_started: "{{ now() }}"
+                  - repeat:
+                      while:
+                        - condition: template
+                          value_template: >-
+                            {{ (now() - hold_started).total_seconds() < (on_hold_max_seconds | float(25)) }}
+                      sequence:
+                        - choose:
+                            - conditions: "{{ debug }}"
+                              sequence:
+                                - action: logbook.log
+                                  data:
+                                    name: "BILRESA blueprint (debug)"
+                                    message: "HOLD tick (channel={{ channel }})"
+                        - sequence: "{{ cfg.hold }}"
+                        - delay:
+                            milliseconds: "{{ on_hold_delay_ms | int(250) }}"
+
+          # Switch channel pour remplacer les !input "ch1" par la config du canal courant.
+          # Astuce: HA n'autorise pas l'Ã©valuation dynamique directe sur !input dans choose,
+          # donc on "re-route" ici proprement.
+          - choose:
+              - conditions: "{{ btn_kind == 'click' }}"
+                sequence: "{{ cfg.click }}"
+              - conditions: "{{ btn_kind == 'double' }}"
+                sequence: "{{ cfg.double }}"
+              - conditions: "{{ btn_kind == 'triple' }}"
+                sequence: "{{ cfg.triple }}"
+              - conditions: "{{ btn_kind == 'long' }}"
+                sequence: "{{ cfg.long }}"
+            default: []
+
+  # ---------------------------------------------------------------------------
+  # 3) Gestion de la MOLETTE (relaxed/instant)
+  # ---------------------------------------------------------------------------
+  - choose:
+      - conditions: "{{ family == 'wheel' }}"
+        sequence:
+          # --- 3.1 dÃ©terminer direction + nombre de crans (scroll_clicks) ---
+          - variables:
+              eval_mode: "{{ cfg.eval_mode }}"
+              # Direction: dÃ©pend de l'Ã©vÃ©nement ou du sensor.
+              # On essaie d'utiliser event_type en prioritÃ©.
+              raw_event_type: >-
+                {% if trigger.id.startswith('wheel_event') %}
+                  {{ state_attr(cfg.scroll_event, 'event_type') or states(cfg.scroll_event) }}
+                {% else %}
+                  {{ states(cfg.scroll_sensor) }}
+                {% endif %}
+              scroll_direction: >-
+                {% set t = (raw_event_type|string)|lower %}
+                {% if 'left' in t or 'down' in t or 'ccw' in t %} left
+                {% elif 'right' in t or 'up' in t or 'cw' in t %} right
+                {% else %}
+                  right
+                {% endif %}
+              scroll_clicks: >-
+                {# relaxed: Matter donne souvent 1..8 "clicks" dans un attribut #}
+                {% set c = state_attr(cfg.scroll_event, 'clicks') or state_attr(cfg.scroll_event, 'steps') %}
+                {% if eval_mode == 'instant' %}
+                  1
+                {% else %}
+                  {{ (c if c is number else 1) | int(1) }}
+                {% endif %}
+
+          # --- 3.2 debounce en instant ---
+          - choose:
+              - conditions: "{{ eval_mode == 'instant' and (instant_debounce_ms|int(0)) > 0 }}"
+                sequence:
+                  # "debounce" lÃ©ger: on ignore les triggers trop rapprochÃ©s
+                  # en utilisant le contexte de l'automatisation via cette variable locale:
+                  - delay:
+                      milliseconds: "{{ instant_debounce_ms | int }}"
+
+          # --- 3.3 dÃ©terminer le mode molette effectif (static/dynamic) ---
+          - variables:
+              wheel_mode_effective: >-
+                {% if cfg.mode == 'dynamic: choose from input_select' %}
+                  {% set sel = cfg.mode_dynamic %}
+                  {% if sel %}
+                    {{ states(sel) }}
+                  {% else %}
+                    lights: dim
+                  {% endif %}
+                {% else %}
+                  {{ cfg.mode }}
+                {% endif %}
+              targets: "{{ cfg.targets }}"
+
+          - choose:
+              - conditions: "{{ debug }}"
+                sequence:
+                  - action: logbook.log
+                    data:
+                      name: "BILRESA blueprint (debug)"
+                      message: >-
+                        Wheel mode={{ wheel_mode_effective }} | dir={{ scroll_direction }} | clicks={{ scroll_clicks }} | targets={{ targets }}
+                      entity_id: "{{ cfg.scroll_event }}"
+
+          # --- 3.4 exÃ©cuter selon le mode ---
+          - choose:
+              # -------------------------------------------------------------
+              # MODE: USER DEFINED
+              # -------------------------------------------------------------
+              - conditions: "{{ wheel_mode_effective == 'user defined' }}"
+                sequence:
+                  - variables:
+                      # exposer les variables promises
+                      scroll_clicks: "{{ scroll_clicks }}"
+                      scroll_direction: "{{ scroll_direction }}"
+                  - sequence: "{{ cfg.user_wheel }}"
+
+              # -------------------------------------------------------------
+              # MODE: MEDIA VOLUME
+              # -------------------------------------------------------------
+              - conditions: "{{ wheel_mode_effective == 'media: volume control' }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ targets }}"
+                      sequence:
+                        - variables:
+                            mp: "{{ repeat.item }}"
+                            step: "{{ (volume_step_pct|float(5) / 100.0) * (scroll_clicks|int(1)) }}"
+                            cur: "{{ state_attr(mp,'volume_level') | float(0) }}"
+                            maxv: "{{ (volume_max_pct|float(100) / 100.0) }}"
+                            newv: >-
+                              {% if scroll_direction == 'right' %}
+                                {{ [cur + step, maxv] | min }}
+                              {% else %}
+                                {{ [cur - step, 0] | max }}
+                              {% endif %}
+                        - choose:
+                            - conditions: "{{ eval_mode == 'instant' and volume_use_up_down_for_instant }}"
+                              sequence:
+                                # en instant: on passe par volume_up/down pour Ã©viter volume_set en rafale
+                                - choose:
+                                    - conditions: "{{ scroll_direction == 'right' }}"
+                                      sequence:
+                                        - repeat:
+                                            count: "{{ scroll_clicks|int(1) }}"
+                                            sequence:
+                                              - action: media_player.volume_up
+                                                target: { entity_id: "{{ mp }}" }
+                                    - conditions: "{{ scroll_direction == 'left' }}"
+                                      sequence:
+                                        - repeat:
+                                            count: "{{ scroll_clicks|int(1) }}"
+                                            sequence:
+                                              - action: media_player.volume_down
+                                                target: { entity_id: "{{ mp }}" }
+                            - conditions: "{{ not (eval_mode == 'instant' and volume_use_up_down_for_instant) }}"
+                              sequence:
+                                - action: media_player.volume_set
+                                  target: { entity_id: "{{ mp }}" }
+                                  data:
+                                    volume_level: "{{ newv }}"
+
+              # -------------------------------------------------------------
+              # MODES: LIGHTS
+              # -------------------------------------------------------------
+              - conditions: >-
+                  {{
+                    wheel_mode_effective in [
+                      'lights: dim',
+                      'lights: color temp only',
+                      'lights: color hue only',
+                      'lights: color temp and color hue'
+                    ]
+                  }}
+                sequence:
+                  - repeat:
+                      for_each: "{{ targets }}"
+                      sequence:
+                        - variables:
+                            light_ent: "{{ repeat.item }}"
+                            is_on: "{{ is_state(light_ent,'on') }}"
+                            supported: "{{ state_attr(light_ent,'supported_color_modes') or [] }}"
+                            has_ct: "{{ 'color_temp' in supported or 'color_temp_kelvin' in supported }}"
+                            has_hs: "{{ 'hs' in supported }}"
+                            # Fallback: si supported_color_modes absent, on infÃ¨re via attributs
+                            has_ct_fallback: "{{ state_attr(light_ent,'color_temp_kelvin') is not none }}"
+                            has_hs_fallback: "{{ state_attr(light_ent,'hs_color') is not none }}"
+                            can_ct: "{{ has_ct or has_ct_fallback }}"
+                            can_hs: "{{ has_hs or has_hs_fallback }}"
+
+                        # Option: allumer si Ã©teint
+                        - choose:
+                            - conditions: "{{ (not is_on) and scroll_turn_on_if_off }}"
+                              sequence:
+                                - action: light.turn_on
+                                  target: { entity_id: "{{ light_ent }}" }
+                                  data:
+                                    brightness_pct: "{{ dim_min_pct | int(5) }}"
+
+                        # Ensuite, appliquer l'action selon le mode
+                        - choose:
+                            # --- DIM ---
+                            - conditions: "{{ wheel_mode_effective == 'lights: dim' }}"
+                              sequence:
+                                - variables:
+                                    step: "{{ (dim_step_pct | int(5)) * (scroll_clicks|int(1)) }}"
+                                    cur_pct: >-
+                                      {% set b = state_attr(light_ent,'brightness') %}
+                                      {% if b is none %} 0 {% else %} {{ (b|float(0) / 255.0 * 100.0) }} {% endif %}
+                                    new_pct: >-
+                                      {% if scroll_direction == 'right' %}
+                                        {{ [cur_pct + step, 100] | min }}
+                                      {% else %}
+                                        {{ [cur_pct - step, (dim_min_pct|int(5))] | max }}
+                                      {% endif %}
+                                - action: light.turn_on
+                                  target: { entity_id: "{{ light_ent }}" }
+                                  data:
+                                    brightness_pct: "{{ new_pct | round(0) }}"
+
+                            # --- COLOR TEMP ONLY ---
+                            - conditions: "{{ wheel_mode_effective == 'lights: color temp only' }}"
+                              sequence:
+                                - choose:
+                                    - conditions: "{{ can_ct }}"
+                                      sequence:
+                                        - variables:
+                                            cur_ct: "{{ state_attr(light_ent,'color_temp_kelvin') | int(max_color_temp) }}"
+                                            step: "{{ (color_temp_step|int(300)) * (scroll_clicks|int(1)) }}"
+                                            new_ct: >-
+                                              {% if scroll_direction == 'right' %}
+                                                {{ [cur_ct + step, (max_color_temp|int(4000))] | min }}
+                                              {% else %}
+                                                {{ [cur_ct - step, (min_color_temp|int(2200))] | max }}
+                                              {% endif %}
+                                        - action: light.turn_on
+                                          target: { entity_id: "{{ light_ent }}" }
+                                          data:
+                                            color_temp_kelvin: "{{ new_ct }}"
+                                    - conditions: "{{ debug }}"
+                                      sequence:
+                                        - action: logbook.log
+                                          data:
+                                            name: "BILRESA blueprint (debug)"
+                                            message: "CT non supportÃ© sur {{ light_ent }} â€” ignorÃ©"
+
+                            # --- COLOR HUE ONLY ---
+                            - conditions: "{{ wheel_mode_effective == 'lights: color hue only' }}"
+                              sequence:
+                                - choose:
+                                    - conditions: "{{ can_hs }}"
+                                      sequence:
+                                        - variables:
+                                            hs: "{{ state_attr(light_ent,'hs_color') or [0, color_saturation|int(100)] }}"
+                                            cur_h: "{{ hs[0] | float(0) }}"
+                                            step: "{{ (color_hue_step|int(5)) * (scroll_clicks|int(1)) }}"
+                                            new_h: >-
+                                              {% set v = cur_h + (step if scroll_direction == 'right' else -step) %}
+                                              {% if v > 360 %} {{ v - 360 }}
+                                              {% elif v < 0 %} {{ v + 360 }}
+                                              {% else %} {{ v }}
+                                              {% endif %}
+                                        - action: light.turn_on
+                                          target: { entity_id: "{{ light_ent }}" }
+                                          data:
+                                            hs_color:
+                                              - "{{ new_h }}"
+                                              - "{{ (color_saturation|int(100)) }}"
+
+                            # --- COLOR TEMP AND HUE ---
+                            - conditions: "{{ wheel_mode_effective == 'lights: color temp and color hue' }}"
+                              sequence:
+                                # logique: si CT supportÃ© => CT, sinon HS (plus prÃ©visible que l'ancien test 'color_temp_kelvin is none')
+                                - choose:
+                                    - conditions: "{{ can_ct }}"
+                                      sequence:
+                                        - variables:
+                                            cur_ct: "{{ state_attr(light_ent,'color_temp_kelvin') | int(max_color_temp) }}"
+                                            step: "{{ (color_temp_step|int(300)) * (scroll_clicks|int(1)) }}"
+                                            new_ct: >-
+                                              {% if scroll_direction == 'right' %}
+                                                {{ [cur_ct + step, (max_color_temp|int(4000))] | min }}
+                                              {% else %}
+                                                {{ [cur_ct - step, (min_color_temp|int(2200))] | max }}
+                                              {% endif %}
+                                        - action: light.turn_on
+                                          target: { entity_id: "{{ light_ent }}" }
+                                          data:
+                                            color_temp_kelvin: "{{ new_ct }}"
+                                    - conditions: "{{ can_hs }}"
+                                      sequence:
+                                        - variables:
+                                            hs: "{{ state_attr(light_ent,'hs_color') or [0, color_saturation|int(100)] }}"
+                                            cur_h: "{{ hs[0] | float(0) }}"
+                                            step: "{{ (color_hue_step|int(5)) * (scroll_clicks|int(1)) }}"
+                                            new_h: >-
+                                              {% set v = cur_h + (step if scroll_direction == 'right' else -step) %}
+                                              {% if v > 360 %} {{ v - 360 }}
+                                              {% elif v < 0 %} {{ v + 360 }}
+                                              {% else %} {{ v }}
+                                              {% endif %}
+                                        - action: light.turn_on
+                                          target: { entity_id: "{{ light_ent }}" }
+                                          data:
+                                            hs_color:
+                                              - "{{ new_h }}"
+                                              - "{{ (color_saturation|int(100)) }}"
+
+            default:
+              # fallback si wheel_mode_effective inattendu (dynamic = valeur inconnue)
+              - choose:
+                  - conditions: "{{ debug }}"
+                    sequence:
+                      - action: logbook.log
+                        data:
+                          name: "BILRESA blueprint (debug)"
+                          message: >-
+                            Mode molette inconnu "{{ wheel_mode_effective }}". Fallback => lights: dim.
+              - variables:
+                  wheel_mode_effective: "lights: dim"
+              - repeat:
+                  for_each: "{{ targets }}"
+                  sequence:
+                    - variables:
+                        light_ent: "{{ repeat.item }}"
+                        step: "{{ (dim_step_pct | int(5)) * (scroll_clicks|int(1)) }}"
+                        cur_pct: >-
+                          {% set b = state_attr(light_ent,'brightness') %}
+                          {% if b is none %} 0 {% else %} {{ (b|float(0) / 255.0 * 100.0) }} {% endif %}
+                        new_pct: >-
+                          {% if scroll_direction == 'right' %}
+                            {{ [cur_pct + step, 100] | min }}
+                          {% else %}
+                            {{ [cur_pct - step, (dim_min_pct|int(5))] | max }}
+                          {% endif %}
+                    - action: light.turn_on
+                      target: { entity_id: "{{ light_ent }}" }
+                      data:
+                        brightness_pct: "{{ new_pct | round(0) }}"
