@@ -1,23 +1,23 @@
 blueprint:
-  name: IKEA BILRESA Scroll Wheel (Matter) â€” Refactor FR (commentÃ©)
+  name: IKEA BILRESA Scroll Wheel (Matter) — Refactor FR (commenté)
   description: |-
     Refonte (refactor) du blueprint "Ikea_bilresa_scroll_wheel" de jhol-byte.
     Objectifs:
-      - rÃ©duire la duplication via une logique gÃ©nÃ©rique par canal
+      - réduire la duplication via une logique générique par canal
       - ajouter un mode debug (logbook)
-      - option "tourner la molette => allumer si Ã©teint"
+      - option "tourner la molette => allumer si éteint"
       - anti-rafale (debounce) en mode "instant"
-      - meilleure dÃ©tection des capacitÃ©s couleur via supported_color_modes (quand dispo)
-      - arrÃªt du on-hold basÃ© sur le temps (au lieu d'un repeat.index arbitraire)
+      - meilleure détection des capacités couleur via supported_color_modes (quand dispo)
+      - arrêt du on-hold basé sur le temps (au lieu d'un repeat.index arbitraire)
       - fallback robuste pour le mode "dynamic" (input_select)
 
     Sources / inspiration:
       - Gist original: https://gist.github.com/jhol-byte/b2731a4d2476f530d76b9ff409f7f3a4
       - Thread HA community: https://community.home-assistant.io/t/ikea-bilresa-scroll-wheel-blueprint-matter-the-original/965365
 
-    âš ï¸ Notes importantes
-      - La partie "scroll wheel" en mode instant nÃ©cessite que les entitÃ©s diagnostiques "Current switch position (x)" soient activÃ©es sur le device.
-      - Selon ta langue HA, les noms/entitÃ©s peuvent varier. Ce blueprint te laisse sÃ©lectionner explicitement les entitÃ©s nÃ©cessaires.
+    ⚠️ Notes importantes
+      - La partie "scroll wheel" en mode instant nécessite que les entités diagnostiques "Current switch position (x)" soient activées sur le device.
+      - Selon ta langue HA, les noms/entités peuvent varier. Ce blueprint te laisse sélectionner explicitement les entités nécessaires.
 domain: automation
 
 ###############################################################################
@@ -25,75 +25,75 @@ domain: automation
 ###############################################################################
 input:
   # ---------------------------------------------------------------------------
-  # DEBUG / observabilitÃ©
+  # DEBUG / observabilité
   # ---------------------------------------------------------------------------
   debug_enabled:
     name: Debug (logbook)
-    description: "Si activÃ©, Ã©crit dans le logbook lors des actions (utile pour le dÃ©pannage)."
+    description: "Si activé, écrit dans le logbook lors des actions (utile pour le dépannage)."
     default: false
     selector:
       boolean: {}
 
   # ---------------------------------------------------------------------------
-  # ENTITÃ‰S DE LA TÃ‰LÃ‰COMMANDE (sÃ©lection explicite)
+  # ENTITÉS DE LA TÉLÉCOMMANDE (sélection explicite)
   #
   # Pourquoi:
-  # - le blueprint original essaye de retrouver les entitÃ©s Ã  partir du device + regex.
+  # - le blueprint original essaye de retrouver les entités à partir du device + regex.
   # - c'est fragile (langue, renommage, multiples devices, etc.).
-  # - ici: tu choisis les 3 entitÃ©s event (bouton) + les entitÃ©s de scroll (Ã©vÃ©nement et/ou sensors).
+  # - ici: tu choisis les 3 entités event (bouton) + les entités de scroll (événement et/ou sensors).
   # ---------------------------------------------------------------------------
   btn_event_ch1:
-    name: "Canal 1 â€” Event bouton"
-    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_1)."
+    name: "Canal 1 — Event bouton"
+    description: "Entité 'event' du bouton (ex: event.bilresa_1)."
     selector:
       entity:
         filter:
           domain: event
 
   btn_event_ch2:
-    name: "Canal 2 â€” Event bouton"
-    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_2)."
+    name: "Canal 2 — Event bouton"
+    description: "Entité 'event' du bouton (ex: event.bilresa_2)."
     selector:
       entity:
         filter:
           domain: event
 
   btn_event_ch3:
-    name: "Canal 3 â€” Event bouton"
-    description: "EntitÃ© 'event' du bouton (ex: event.bilresa_3)."
+    name: "Canal 3 — Event bouton"
+    description: "Entité 'event' du bouton (ex: event.bilresa_3)."
     selector:
       entity:
         filter:
           domain: event
 
-  # Scroll wheel: en "relaxed", l'Ã©vÃ©nement suffit souvent (un seul trigger aprÃ¨s la rotation).
+  # Scroll wheel: en "relaxed", l'événement suffit souvent (un seul trigger après la rotation).
   # En "instant", il faut les sensors diagnostiques (9 au total dans le device) pour capturer chaque cran.
   scroll_event_ch1:
-    name: "Canal 1 â€” Event molette (gauche/droite)"
-    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 1."
+    name: "Canal 1 — Event molette (gauche/droite)"
+    description: "Entité 'event' associée à la molette pour le canal 1."
     selector:
       entity:
         filter:
           domain: event
   scroll_event_ch2:
-    name: "Canal 2 â€” Event molette (gauche/droite)"
-    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 2."
+    name: "Canal 2 — Event molette (gauche/droite)"
+    description: "Entité 'event' associée à la molette pour le canal 2."
     selector:
       entity:
         filter:
           domain: event
   scroll_event_ch3:
-    name: "Canal 3 â€” Event molette (gauche/droite)"
-    description: "EntitÃ© 'event' associÃ©e Ã  la molette pour le canal 3."
+    name: "Canal 3 — Event molette (gauche/droite)"
+    description: "Entité 'event' associée à la molette pour le canal 3."
     selector:
       entity:
         filter:
           domain: event
 
   # Optionnel: sensors "Current switch position (x)" pour le mode instant
-  # Dans le device Bilresa, tu peux activer les entitÃ©s diagnostiques.
+  # Dans le device Bilresa, tu peux activer les entités diagnostiques.
   scroll_sensor_ch1:
-    name: "Canal 1 â€” Sensor molette (instant)"
+    name: "Canal 1 — Sensor molette (instant)"
     description: "Sensor diagnostique de la molette (Current switch position) pour le canal 1. Requis pour evaluation_mode=instant."
     default: null
     selector:
@@ -101,7 +101,7 @@ input:
         filter:
           domain: sensor
   scroll_sensor_ch2:
-    name: "Canal 2 â€” Sensor molette (instant)"
+    name: "Canal 2 — Sensor molette (instant)"
     description: "Sensor diagnostique de la molette (Current switch position) pour le canal 2. Requis pour evaluation_mode=instant."
     default: null
     selector:
@@ -109,7 +109,7 @@ input:
         filter:
           domain: sensor
   scroll_sensor_ch3:
-    name: "Canal 3 â€” Sensor molette (instant)"
+    name: "Canal 3 — Sensor molette (instant)"
     description: "Sensor diagnostique de la molette (Current switch position) pour le canal 3. Requis pour evaluation_mode=instant."
     default: null
     selector:
@@ -121,7 +121,7 @@ input:
   # ACTIONS PAR CANAL (bouton)
   # ---------------------------------------------------------------------------
   channel1_section:
-    name: Canal 1 â€” Actions bouton
+    name: Canal 1 — Actions bouton
     collapsed: true
     input:
       click_action_ch1:
@@ -141,13 +141,13 @@ input:
         default: []
         selector: { action: {} }
       on_hold_action_ch1:
-        name: "Maintien (rÃ©pÃ©tition)"
-        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        name: "Maintien (répétition)"
+        description: "Répète l'action tant que le bouton est maintenu (voir délai et durée max dans les paramètres globaux)."
         default: []
         selector: { action: {} }
 
   channel2_section:
-    name: Canal 2 â€” Actions bouton
+    name: Canal 2 — Actions bouton
     collapsed: true
     input:
       click_action_ch2:
@@ -167,13 +167,13 @@ input:
         default: []
         selector: { action: {} }
       on_hold_action_ch2:
-        name: "Maintien (rÃ©pÃ©tition)"
-        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        name: "Maintien (répétition)"
+        description: "Répète l'action tant que le bouton est maintenu (voir délai et durée max dans les paramètres globaux)."
         default: []
         selector: { action: {} }
 
   channel3_section:
-    name: Canal 3 â€” Actions bouton
+    name: Canal 3 — Actions bouton
     collapsed: true
     input:
       click_action_ch3:
@@ -193,21 +193,21 @@ input:
         default: []
         selector: { action: {} }
       on_hold_action_ch3:
-        name: "Maintien (rÃ©pÃ©tition)"
-        description: "RÃ©pÃ¨te l'action tant que le bouton est maintenu (voir dÃ©lai et durÃ©e max dans les paramÃ¨tres globaux)."
+        name: "Maintien (répétition)"
+        description: "Répète l'action tant que le bouton est maintenu (voir délai et durée max dans les paramètres globaux)."
         default: []
         selector: { action: {} }
 
   # ---------------------------------------------------------------------------
-  # MOLETTE PAR CANAL: cibles + mode + mode d'Ã©valuation + action user-defined
+  # MOLETTE PAR CANAL: cibles + mode + mode d'évaluation + action user-defined
   # ---------------------------------------------------------------------------
   wheel_section:
-    name: Molette â€” Cibles et modes (par canal)
+    name: Molette — Cibles et modes (par canal)
     collapsed: true
     input:
       scroll_wheel_target_ch1:
-        name: "Canal 1 â€” Cible(s) molette"
-        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        name: "Canal 1 — Cible(s) molette"
+        description: "Lumière(s) ou media_player(s) contrôlé(s) par la molette."
         default: []
         selector:
           entity:
@@ -218,8 +218,8 @@ input:
                 - media_player
 
       scroll_wheel_target_ch2:
-        name: "Canal 2 â€” Cible(s) molette"
-        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        name: "Canal 2 — Cible(s) molette"
+        description: "Lumière(s) ou media_player(s) contrôlé(s) par la molette."
         default: []
         selector:
           entity:
@@ -230,8 +230,8 @@ input:
                 - media_player
 
       scroll_wheel_target_ch3:
-        name: "Canal 3 â€” Cible(s) molette"
-        description: "LumiÃ¨re(s) ou media_player(s) contrÃ´lÃ©(s) par la molette."
+        name: "Canal 3 — Cible(s) molette"
+        description: "Lumière(s) ou media_player(s) contrôlé(s) par la molette."
         default: []
         selector:
           entity:
@@ -242,8 +242,8 @@ input:
                 - media_player
 
       scroll_wheel_mode_ch1:
-        name: "Canal 1 â€” Mode molette"
-        description: "Attribut contrÃ´lÃ© par la molette."
+        name: "Canal 1 — Mode molette"
+        description: "Attribut contrôlé par la molette."
         default: "lights: dim"
         selector:
           select:
@@ -257,8 +257,8 @@ input:
               - "user defined"
 
       scroll_wheel_mode_ch2:
-        name: "Canal 2 â€” Mode molette"
-        description: "Attribut contrÃ´lÃ© par la molette."
+        name: "Canal 2 — Mode molette"
+        description: "Attribut contrôlé par la molette."
         default: "lights: dim"
         selector:
           select:
@@ -272,8 +272,8 @@ input:
               - "user defined"
 
       scroll_wheel_mode_ch3:
-        name: "Canal 3 â€” Mode molette"
-        description: "Attribut contrÃ´lÃ© par la molette."
+        name: "Canal 3 — Mode molette"
+        description: "Attribut contrôlé par la molette."
         default: "lights: dim"
         selector:
           select:
@@ -287,10 +287,10 @@ input:
               - "user defined"
 
       scroll_wheel_mode_dynamic_ch1:
-        name: "Canal 1 â€” input_select (mode dynamique)"
+        name: "Canal 1 — input_select (mode dynamique)"
         description: |-
           Uniquement si Mode molette = "dynamic: choose from input_select".
-          CrÃ©e un input_select contenant des valeurs parmi:
+          Crée un input_select contenant des valeurs parmi:
             - lights: dim
             - lights: color temp and color hue
             - lights: color temp only
@@ -304,7 +304,7 @@ input:
               domain: input_select
 
       scroll_wheel_mode_dynamic_ch2:
-        name: "Canal 2 â€” input_select (mode dynamique)"
+        name: "Canal 2 — input_select (mode dynamique)"
         default: null
         selector:
           entity:
@@ -312,7 +312,7 @@ input:
               domain: input_select
 
       scroll_wheel_mode_dynamic_ch3:
-        name: "Canal 3 â€” input_select (mode dynamique)"
+        name: "Canal 3 — input_select (mode dynamique)"
         default: null
         selector:
           entity:
@@ -320,117 +320,117 @@ input:
               domain: input_select
 
       scroll_wheel_mode_ext_ch1:
-        name: "Canal 1 â€” Ã‰valuation molette"
+        name: "Canal 1 — Évaluation molette"
         description: |-
-          relaxed : 1 action aprÃ¨s rotation (moins d'appels, plus stable)
-          instant : action Ã  chaque cran (plus rÃ©actif) â€” nÃ©cessite les sensors diagnostiques activÃ©s.
+          relaxed : 1 action après rotation (moins d'appels, plus stable)
+          instant : action à chaque cran (plus réactif) — nécessite les sensors diagnostiques activés.
         default: "relaxed"
         selector:
           select:
             options: ["relaxed", "instant"]
 
       scroll_wheel_mode_ext_ch2:
-        name: "Canal 2 â€” Ã‰valuation molette"
+        name: "Canal 2 — Évaluation molette"
         default: "relaxed"
         selector:
           select:
             options: ["relaxed", "instant"]
 
       scroll_wheel_mode_ext_ch3:
-        name: "Canal 3 â€” Ã‰valuation molette"
+        name: "Canal 3 — Évaluation molette"
         default: "relaxed"
         selector:
           select:
             options: ["relaxed", "instant"]
 
       scroll_wheel_user_action_ch1:
-        name: "Canal 1 â€” Action user-defined (molette)"
+        name: "Canal 1 — Action user-defined (molette)"
         description: |-
-          UtilisÃ© uniquement si Mode molette = "user defined".
-          Variables exposÃ©es:
+          Utilisé uniquement si Mode molette = "user defined".
+          Variables exposées:
             - scroll_clicks: en instant = 1, en relaxed = 1..8 (selon la rotation)
             - scroll_direction: 'left' ou 'right'
         default: []
         selector: { action: {} }
 
       scroll_wheel_user_action_ch2:
-        name: "Canal 2 â€” Action user-defined (molette)"
+        name: "Canal 2 — Action user-defined (molette)"
         default: []
         selector: { action: {} }
 
       scroll_wheel_user_action_ch3:
-        name: "Canal 3 â€” Action user-defined (molette)"
+        name: "Canal 3 — Action user-defined (molette)"
         default: []
         selector: { action: {} }
 
   # ---------------------------------------------------------------------------
-  # PARAMÃˆTRES GLOBAUX
+  # PARAMÈTRES GLOBAUX
   # ---------------------------------------------------------------------------
   global_setting:
-    name: ParamÃ¨tres globaux
+    name: Paramètres globaux
     collapsed: true
     input:
       # Dimming
       dim_step_pct:
-        name: "LumiÃ¨re â€” pas de variation (%)"
-        description: "Variation de luminositÃ© (en %) par cran, multipliÃ©e par scroll_clicks."
+        name: "Lumière — pas de variation (%)"
+        description: "Variation de luminosité (en %) par cran, multipliée par scroll_clicks."
         default: 5
         selector:
           number: { min: 1, max: 50, mode: box, unit_of_measurement: "%" }
 
       dim_min_pct:
-        name: "LumiÃ¨re â€” luminositÃ© min (%)"
+        name: "Lumière — luminosité min (%)"
         default: 5
         selector:
           number: { min: 1, max: 100, mode: box, unit_of_measurement: "%" }
 
       # Color temperature
       min_color_temp:
-        name: "LumiÃ¨re â€” tempÃ©rature min (K)"
+        name: "Lumière — température min (K)"
         default: 2200
         selector:
           number: { min: 1500, max: 6500, mode: box, unit_of_measurement: "K" }
 
       max_color_temp:
-        name: "LumiÃ¨re â€” tempÃ©rature max (K)"
+        name: "Lumière — température max (K)"
         default: 4000
         selector:
           number: { min: 1500, max: 6500, mode: box, unit_of_measurement: "K" }
 
       color_temp_step:
-        name: "LumiÃ¨re â€” pas tempÃ©rature (K)"
+        name: "Lumière — pas température (K)"
         default: 300
         selector:
           number: { min: 50, max: 2000, mode: box, unit_of_measurement: "K" }
 
       # Color hue
       color_hue_step:
-        name: "LumiÃ¨re â€” pas teinte (Â°)"
+        name: "Lumière — pas teinte (°)"
         default: 5
         selector:
-          number: { min: 1, max: 60, mode: box, unit_of_measurement: "Â°" }
+          number: { min: 1, max: 60, mode: box, unit_of_measurement: "°" }
 
       color_saturation:
-        name: "LumiÃ¨re â€” saturation (%)"
+        name: "Lumière — saturation (%)"
         default: 100
         selector:
           number: { min: 0, max: 100, mode: box, unit_of_measurement: "%" }
 
       # Media volume
       volume_step_pct:
-        name: "MÃ©dia â€” pas volume (%)"
+        name: "Média — pas volume (%)"
         default: 5
         selector:
           number: { min: 1, max: 50, mode: box, unit_of_measurement: "%" }
 
       volume_max_pct:
-        name: "MÃ©dia â€” volume max (%)"
+        name: "Média — volume max (%)"
         default: 100
         selector:
           number: { min: 1, max: 100, mode: box, unit_of_measurement: "%" }
 
       volume_use_up_down_for_instant:
-        name: "MÃ©dia â€” utiliser volume_up/down en instant"
+        name: "Média — utiliser volume_up/down en instant"
         description: "Certains media_players supportent mieux volume_up/down que volume_set en rafale."
         default: false
         selector:
@@ -438,30 +438,30 @@ input:
 
       # Molette: options UX
       scroll_turn_on_if_off:
-        name: "Molette â€” allumer la lumiÃ¨re si Ã©teinte"
-        description: "Si activÃ©, une rotation sur une lumiÃ¨re Ã©teinte l'allume au minimum avant d'appliquer la variation."
+        name: "Molette — allumer la lumière si éteinte"
+        description: "Si activé, une rotation sur une lumière éteinte l'allume au minimum avant d'appliquer la variation."
         default: true
         selector:
           boolean: {}
 
       # Debounce pour instant
       instant_debounce_ms:
-        name: "Molette â€” debounce instant (ms)"
-        description: "Ignore les triggers molette si trop rapprochÃ©s (anti-bouchon). 0 = dÃ©sactivÃ©."
+        name: "Molette — debounce instant (ms)"
+        description: "Ignore les triggers molette si trop rapprochés (anti-bouchon). 0 = désactivé."
         default: 120
         selector:
           number: { min: 0, max: 500, mode: box, unit_of_measurement: "ms" }
 
       # on-hold loop
       on_hold_delay_ms:
-        name: "Maintien â€” dÃ©lai entre rÃ©pÃ©titions (ms)"
+        name: "Maintien — délai entre répétitions (ms)"
         default: 250
         selector:
           number: { min: 50, max: 2000, mode: box, unit_of_measurement: "ms" }
 
       on_hold_max_seconds:
-        name: "Maintien â€” durÃ©e max (s)"
-        description: "SÃ©curitÃ©: stoppe la rÃ©pÃ©tition au bout de X secondes mÃªme si l'Ã©vÃ©nement relÃ¢chement n'est pas dÃ©tectÃ©."
+        name: "Maintien — durée max (s)"
+        description: "Sécurité: stoppe la répétition au bout de X secondes même si l'événement relâchement n'est pas détecté."
         default: 25
         selector:
           number: { min: 5, max: 120, mode: box, unit_of_measurement: "s" }
@@ -469,9 +469,9 @@ input:
 ###############################################################################
 # TRIGGERS
 #
-# - Boutons: on dÃ©clenche sur changement d'Ã©tat de l'entitÃ© event du canal.
-# - Molette relaxed: dÃ©clenche sur event molette.
-# - Molette instant: dÃ©clenche sur sensor diagnostique (si fourni).
+# - Boutons: on déclenche sur changement d'état de l'entité event du canal.
+# - Molette relaxed: déclenche sur event molette.
+# - Molette instant: déclenche sur sensor diagnostique (si fourni).
 ###############################################################################
 trigger:
   # Bouton canal 1/2/3
@@ -496,7 +496,7 @@ trigger:
     entity_id: !input scroll_event_ch3
     id: wheel_event_ch3
 
-  # Molette instant (sensor diagnostique) â€” triggers optionnels
+  # Molette instant (sensor diagnostique) — triggers optionnels
   - platform: state
     entity_id: !input scroll_sensor_ch1
     id: wheel_sensor_ch1
@@ -508,7 +508,7 @@ trigger:
     id: wheel_sensor_ch3
 
 ###############################################################################
-# VARIABLES: normalisation des entrÃ©es par canal + utilitaires
+# VARIABLES: normalisation des entrées par canal + utilitaires
 ###############################################################################
 variables:
   debug: !input debug_enabled
@@ -560,7 +560,7 @@ variables:
       eval_mode: !input scroll_wheel_mode_ext_ch3
       user_wheel: !input scroll_wheel_user_action_ch3
 
-  # ParamÃ¨tres globaux
+  # Paramètres globaux
   dim_step_pct: !input dim_step_pct
   dim_min_pct: !input dim_min_pct
   min_color_temp: !input min_color_temp
@@ -577,7 +577,7 @@ variables:
   on_hold_max_seconds: !input on_hold_max_seconds
 
 ###############################################################################
-# MODE D'EXÃ‰CUTION
+# MODE D'EXÉCUTION
 ###############################################################################
 mode: queued
 max: 10
@@ -587,10 +587,10 @@ max: 10
 ###############################################################################
 action:
   # ---------------------------------------------------------------------------
-  # 1) DÃ©terminer le canal + le type d'action (bouton ou molette)
+  # 1) Déterminer le canal + le type d'action (bouton ou molette)
   # ---------------------------------------------------------------------------
   - variables:
-      # Canal dÃ©duit du trigger.id
+      # Canal déduit du trigger.id
       channel: >-
         {% if trigger.id in ['btn_ch1','wheel_event_ch1','wheel_sensor_ch1'] %} ch1
         {% elif trigger.id in ['btn_ch2','wheel_event_ch2','wheel_sensor_ch2'] %} ch2
@@ -600,12 +600,12 @@ action:
       cfg: "{{ ch_cfg[channel] }}"
 
       # On distingue 2 grandes familles:
-      # - "button": Ã©vÃ©nements bouton (click/double/triple/long/hold)
-      # - "wheel": Ã©vÃ©nements molette (relaxed/instant)
+      # - "button": événements bouton (click/double/triple/long/hold)
+      # - "wheel": événements molette (relaxed/instant)
       family: >-
         {% if trigger.id.startswith('btn_') %} button {% else %} wheel {% endif %}
 
-  # Debug: log le trigger reÃ§u
+  # Debug: log le trigger reçu
   - choose:
       - conditions: "{{ debug }}"
         sequence:
@@ -622,12 +622,12 @@ action:
   - choose:
       - conditions: "{{ family == 'button' }}"
         sequence:
-          # En HA, une entitÃ© 'event' met Ã  jour des attributs lors du dernier event.
+          # En HA, une entité 'event' met à jour des attributs lors du dernier event.
           # On essaie de lire event_type (sinon fallback sur state/attributes).
           - variables:
               btn_event_type: >-
                 {{ state_attr(cfg.btn_event, 'event_type') or state_attr(cfg.btn_event, 'event') or states(cfg.btn_event) }}
-          # Normalisation: on mappe les event types Matter/IKEA en catÃ©gories.
+          # Normalisation: on mappe les event types Matter/IKEA en catégories.
           - variables:
               btn_kind: >-
                 {% set t = (btn_event_type|string)|lower %}
@@ -644,19 +644,19 @@ action:
                 sequence:
                   - choose:
                       - conditions: "{{ btn_kind == 'click' }}"
-                        sequence: !input click_action_ch1  # remplacÃ© juste aprÃ¨s par logique gÃ©nÃ©rique
+                        sequence: !input click_action_ch1  # remplacé juste après par logique générique
                       - conditions: "{{ btn_kind == 'double' }}"
                         sequence: !input double_click_action_ch1
                       - conditions: "{{ btn_kind == 'triple' }}"
                         sequence: !input triple_click_action_ch1
                       - conditions: "{{ btn_kind == 'long' }}"
                         sequence: !input long_click_action_ch1
-                # NOTE: les sÃ©quences ci-dessus seront surchargÃ©es par le bloc "switch channel" ci-dessous.
+                # NOTE: les séquences ci-dessus seront surchargées par le bloc "switch channel" ci-dessous.
               # --- hold ---
               - conditions: "{{ btn_kind == 'hold' }}"
                 sequence:
-                  # Boucle de maintien: on exÃ©cute l'action cfg.hold toutes les X ms,
-                  # et on stoppe aprÃ¨s on_hold_max_seconds pour Ã©viter une boucle infinie.
+                  # Boucle de maintien: on exécute l'action cfg.hold toutes les X ms,
+                  # et on stoppe après on_hold_max_seconds pour éviter une boucle infinie.
                   - variables:
                       hold_started: "{{ now() }}"
                   - repeat:
@@ -677,7 +677,7 @@ action:
                             milliseconds: "{{ on_hold_delay_ms | int(250) }}"
 
           # Switch channel pour remplacer les !input "ch1" par la config du canal courant.
-          # Astuce: HA n'autorise pas l'Ã©valuation dynamique directe sur !input dans choose,
+          # Astuce: HA n'autorise pas l'évaluation dynamique directe sur !input dans choose,
           # donc on "re-route" ici proprement.
           - choose:
               - conditions: "{{ btn_kind == 'click' }}"
@@ -696,11 +696,11 @@ action:
   - choose:
       - conditions: "{{ family == 'wheel' }}"
         sequence:
-          # --- 3.1 dÃ©terminer direction + nombre de crans (scroll_clicks) ---
+          # --- 3.1 déterminer direction + nombre de crans (scroll_clicks) ---
           - variables:
               eval_mode: "{{ cfg.eval_mode }}"
-              # Direction: dÃ©pend de l'Ã©vÃ©nement ou du sensor.
-              # On essaie d'utiliser event_type en prioritÃ©.
+              # Direction: dépend de l'événement ou du sensor.
+              # On essaie d'utiliser event_type en priorité.
               raw_event_type: >-
                 {% if trigger.id.startswith('wheel_event') %}
                   {{ state_attr(cfg.scroll_event, 'event_type') or states(cfg.scroll_event) }}
@@ -727,12 +727,12 @@ action:
           - choose:
               - conditions: "{{ eval_mode == 'instant' and (instant_debounce_ms|int(0)) > 0 }}"
                 sequence:
-                  # "debounce" lÃ©ger: on ignore les triggers trop rapprochÃ©s
+                  # "debounce" léger: on ignore les triggers trop rapprochés
                   # en utilisant le contexte de l'automatisation via cette variable locale:
                   - delay:
                       milliseconds: "{{ instant_debounce_ms | int }}"
 
-          # --- 3.3 dÃ©terminer le mode molette effectif (static/dynamic) ---
+          # --- 3.3 déterminer le mode molette effectif (static/dynamic) ---
           - variables:
               wheel_mode_effective: >-
                 {% if cfg.mode == 'dynamic: choose from input_select' %}
@@ -757,7 +757,7 @@ action:
                         Wheel mode={{ wheel_mode_effective }} | dir={{ scroll_direction }} | clicks={{ scroll_clicks }} | targets={{ targets }}
                       entity_id: "{{ cfg.scroll_event }}"
 
-          # --- 3.4 exÃ©cuter selon le mode ---
+          # --- 3.4 exécuter selon le mode ---
           - choose:
               # -------------------------------------------------------------
               # MODE: USER DEFINED
@@ -792,7 +792,7 @@ action:
                         - choose:
                             - conditions: "{{ eval_mode == 'instant' and volume_use_up_down_for_instant }}"
                               sequence:
-                                # en instant: on passe par volume_up/down pour Ã©viter volume_set en rafale
+                                # en instant: on passe par volume_up/down pour éviter volume_set en rafale
                                 - choose:
                                     - conditions: "{{ scroll_direction == 'right' }}"
                                       sequence:
@@ -837,13 +837,13 @@ action:
                             supported: "{{ state_attr(light_ent,'supported_color_modes') or [] }}"
                             has_ct: "{{ 'color_temp' in supported or 'color_temp_kelvin' in supported }}"
                             has_hs: "{{ 'hs' in supported }}"
-                            # Fallback: si supported_color_modes absent, on infÃ¨re via attributs
+                            # Fallback: si supported_color_modes absent, on infère via attributs
                             has_ct_fallback: "{{ state_attr(light_ent,'color_temp_kelvin') is not none }}"
                             has_hs_fallback: "{{ state_attr(light_ent,'hs_color') is not none }}"
                             can_ct: "{{ has_ct or has_ct_fallback }}"
                             can_hs: "{{ has_hs or has_hs_fallback }}"
 
-                        # Option: allumer si Ã©teint
+                        # Option: allumer si éteint
                         - choose:
                             - conditions: "{{ (not is_on) and scroll_turn_on_if_off }}"
                               sequence:
@@ -897,7 +897,7 @@ action:
                                         - action: logbook.log
                                           data:
                                             name: "BILRESA blueprint (debug)"
-                                            message: "CT non supportÃ© sur {{ light_ent }} â€” ignorÃ©"
+                                            message: "CT non supporté sur {{ light_ent }} — ignoré"
 
                             # --- COLOR HUE ONLY ---
                             - conditions: "{{ wheel_mode_effective == 'lights: color hue only' }}"
@@ -925,7 +925,7 @@ action:
                             # --- COLOR TEMP AND HUE ---
                             - conditions: "{{ wheel_mode_effective == 'lights: color temp and color hue' }}"
                               sequence:
-                                # logique: si CT supportÃ© => CT, sinon HS (plus prÃ©visible que l'ancien test 'color_temp_kelvin is none')
+                                # logique: si CT supporté => CT, sinon HS (plus prévisible que l'ancien test 'color_temp_kelvin is none')
                                 - choose:
                                     - conditions: "{{ can_ct }}"
                                       sequence:
