@@ -1,7 +1,8 @@
 blueprint:
   name: IKEA BILRESA Scroll Wheel (Matter) — Refactor FR (commenté)
-  description: |-
+  description: |
     Refonte (refactor) du blueprint "Ikea_bilresa_scroll_wheel" de jhol-byte.
+    Version: 2026-03-03
     Objectifs:
       - réduire la duplication via une logique générique par canal
       - ajouter un mode debug (logbook)
