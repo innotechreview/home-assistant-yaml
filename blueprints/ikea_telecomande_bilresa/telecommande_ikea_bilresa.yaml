@@ -1,9 +1,8 @@
 blueprint:
-  name: Ikea_bilresa_scroll_wheel
+  name: Télécommande Ikea Bilresa avec molette de défilement
   description: |
       Blueprint pour Ikea Bilresa Matter (bouton et molette pour 3 canaux différents)
       Version: 2026-02-07
-      Info: https://community.home-assistant.io/t/ikea-bilresa-scroll-wheel-blueprint-matter/965365
   domain: automation
   
   # sélecteurs d'entrée
