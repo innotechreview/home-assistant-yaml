@@ -6,15 +6,15 @@ blueprint:
     Infos : https://community.home-assistant.io/t/ikea-bilresa-scroll-wheel-blueprint-matter/965365
   domain: automation
 
-input:
-  remote:
-    name: Télécommande
-    description: "Télécommande Ikea Bilresa avec molette de défilement"
-    selector:
-      device:
-        filter:
-          manufacturer: IKEA of Sweden
-          model: BILRESA scroll wheel
+  input:
+    remote:
+      name: Télécommande
+      description: "Télécommande Ikea Bilresa avec molette de défilement"
+      selector:
+        device:
+          filter:
+            manufacturer: IKEA of Sweden
+            model: BILRESA scroll wheel
 
   # ————————————————————————
   # CANAL 1
