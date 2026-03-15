@@ -16,389 +16,389 @@ blueprint:
             manufacturer: IKEA of Sweden
             model: BILRESA scroll wheel
 
-  # ————————————————————————
-  # CANAL 1
-  channel1_section:
-    name: Canal 1
-    collapsed: true
-    input:
-      click_action_ch1:
-        name: "Canal 1 : action clic"
-        default: []
-        selector:
-          action: {}
-      double_click_action_ch1:
-        name: "Canal 1 : action double clic"
-        default: []
-        selector:
-          action: {}
-      triple_click_action_ch1:
-        name: "Canal 1 : action triple clic"
-        default: []
-        selector:
-          action: {}
-      long_click_action_ch1:
-        name: "Canal 1 : action long clic"
-        default: []
-        selector:
-          action: {}
-      on_hold_action_ch1:
-        name: "Canal 1 : action appui maintenu"
-        description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
-        default: []
-        selector:
-          action: {}
+    # ————————————————————————
+    # CANAL 1
+    channel1_section:
+      name: Canal 1
+      collapsed: true
+      input:
+        click_action_ch1:
+          name: "Canal 1 : action clic"
+          default: []
+          selector:
+            action: {}
+        double_click_action_ch1:
+          name: "Canal 1 : action double clic"
+          default: []
+          selector:
+            action: {}
+        triple_click_action_ch1:
+          name: "Canal 1 : action triple clic"
+          default: []
+          selector:
+            action: {}
+        long_click_action_ch1:
+          name: "Canal 1 : action long clic"
+          default: []
+          selector:
+            action: {}
+        on_hold_action_ch1:
+          name: "Canal 1 : action appui maintenu"
+          description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
+          default: []
+          selector:
+            action: {}
 
-      scroll_wheel_target_ch1:
-        name: "Canal 1 : Entité contrôlée par la molette"
-        description: |
-          Lumière ou lecteur média à contrôler avec la molette pour le canal 1.
-          Laisser vide si le mode molette est <défini par l’utilisateur>
-        default: []
-        selector:
-          entity:
-            multiple: true
-            filter:
-              domain:
-                - light
-                - media_player
+        scroll_wheel_target_ch1:
+          name: "Canal 1 : Entité contrôlée par la molette"
+          description: |
+            Lumière ou lecteur média à contrôler avec la molette pour le canal 1.
+            Laisser vide si le mode molette est <défini par l’utilisateur>
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                domain:
+                  - light
+                  - media_player
 
-      scroll_wheel_mode_ch1:
-        name: "Canal 1 : Mode molette"
-        description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
-        default: "lights: dim"
-        selector:
-          select:
-            options:
-              - "lights: dim"
-              - "lights: color temp and color hue"
-              - "lights: color temp only"
-              - "lights: color hue only"
-              - "media: volume control"
-              - "dynamic: choisir via input_select"
-              - "user defined"
+        scroll_wheel_mode_ch1:
+          name: "Canal 1 : Mode molette"
+          description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
+          default: "lights: dim"
+          selector:
+            select:
+              options:
+                - "lights: dim"
+                - "lights: color temp and color hue"
+                - "lights: color temp only"
+                - "lights: color hue only"
+                - "media: volume control"
+                - "dynamic: choisir via input_select"
+                - "user defined"
 
-      scroll_wheel_mode_dynamic_ch1:
-        name: "Canal 1 : Sélecteur dynamique du mode molette"
-        description: |
-          Pour le mode molette <dynamique> uniquement, laisser vide sinon.
-          Créer et choisir un input_select contenant les modes molette à choisir dynamiquement, ex. :
-          - "lights: dim"
-          - "lights: color temp only"
-        default: !
-        selector:
-          entity:
-            filter:
-              domain:
-                - input_select
+        scroll_wheel_mode_dynamic_ch1:
+          name: "Canal 1 : Sélecteur dynamique du mode molette"
+          description: |
+            Pour le mode molette <dynamique> uniquement, laisser vide sinon.
+            Créer et choisir un input_select contenant les modes molette à choisir dynamiquement, ex. :
+            - "lights: dim"
+            - "lights: color temp only"
+          default: !
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_select
 
-      scroll_wheel_mode_ext_ch1:
-        name: "Canal 1 : Mode d’évaluation de la molette"
-        description: |
-          <relaxed> : une seule action après défilement
-          <instant> : plusieurs actions pendant le défilement
-          Attention : pour <instant>, les 9 capteurs cachés du Bilresa doivent être activés
-        default: "relaxed"
-        selector:
-          select:
-            options:
-              - "relaxed"
-              - "instant"
+        scroll_wheel_mode_ext_ch1:
+          name: "Canal 1 : Mode d’évaluation de la molette"
+          description: |
+            <relaxed> : une seule action après défilement
+            <instant> : plusieurs actions pendant le défilement
+            Attention : pour <instant>, les 9 capteurs cachés du Bilresa doivent être activés
+          default: "relaxed"
+          selector:
+            select:
+              options:
+                - "relaxed"
+                - "instant"
 
-      scroll_wheel_user_action_ch1:
-        name: "Canal 1 : Action molette définie par l’utilisateur"
-        description: |
-          Pour mode molette <défini par l’utilisateur> uniquement
-          Variables exposées :
-            - <scroll_clicks> : pour <instant> toujours 1, sinon de 1 à 8
-            - <scroll_direction> : 'left' ou 'right'
-        default: []
-        selector:
-          action: {}
+        scroll_wheel_user_action_ch1:
+          name: "Canal 1 : Action molette définie par l’utilisateur"
+          description: |
+            Pour mode molette <défini par l’utilisateur> uniquement
+            Variables exposées :
+              - <scroll_clicks> : pour <instant> toujours 1, sinon de 1 à 8
+              - <scroll_direction> : 'left' ou 'right'
+          default: []
+          selector:
+            action: {}
 
-  # ————————————————————————
-  # CANAL 2 (mêmes options que pour Canal 1)
-  channel2_section:
-    name: Canal 2
-    collapsed: true
-    input:
-      click_action_ch2:
-        name: "Canal 2 : action clic"
-        default: []
-        selector:
-          action: {}
-      double_click_action_ch2:
-        name: "Canal 2 : action double clic"
-        default: []
-        selector:
-          action: {}
-      triple_click_action_ch2:
-        name: "Canal 2 : action triple clic"
-        default: []
-        selector:
-          action: {}
-      long_click_action_ch2:
-        name: "Canal 2 : action long clic"
-        default: []
-        selector:
-          action: {}
-      on_hold_action_ch2:
-        name: "Canal 2 : action appui maintenu"
-        description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
-        default: []
-        selector:
-          action: {}
+    # ————————————————————————
+    # CANAL 2 (mêmes options que pour Canal 1)
+    channel2_section:
+      name: Canal 2
+      collapsed: true
+      input:
+        click_action_ch2:
+          name: "Canal 2 : action clic"
+          default: []
+          selector:
+            action: {}
+        double_click_action_ch2:
+          name: "Canal 2 : action double clic"
+          default: []
+          selector:
+            action: {}
+        triple_click_action_ch2:
+          name: "Canal 2 : action triple clic"
+          default: []
+          selector:
+            action: {}
+        long_click_action_ch2:
+          name: "Canal 2 : action long clic"
+          default: []
+          selector:
+            action: {}
+        on_hold_action_ch2:
+          name: "Canal 2 : action appui maintenu"
+          description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
+          default: []
+          selector:
+            action: {}
 
-      scroll_wheel_target_ch2:
-        name: "Canal 2 : Entité contrôlée par la molette"
-        description: |
-          Lumière ou lecteur média à contrôler avec la molette pour le canal 2.
-          Laisser vide si le mode molette est <défini par l’utilisateur>
-        default: []
-        selector:
-          entity:
-            multiple: true
-            filter:
-              domain:
-                - light
-                - media_player
+        scroll_wheel_target_ch2:
+          name: "Canal 2 : Entité contrôlée par la molette"
+          description: |
+            Lumière ou lecteur média à contrôler avec la molette pour le canal 2.
+            Laisser vide si le mode molette est <défini par l’utilisateur>
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                domain:
+                  - light
+                  - media_player
 
-      scroll_wheel_mode_ch2:
-        name: "Canal 2 : Mode molette"
-        description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
-        default: "lights: dim"
-        selector:
-          select:
-            options:
-              - "lights: dim"
-              - "lights: color temp and color hue"
-              - "lights: color temp only"
-              - "lights: color hue only"
-              - "media: volume control"
-              - "dynamic: choisir via input_select"
-              - "user defined"
+        scroll_wheel_mode_ch2:
+          name: "Canal 2 : Mode molette"
+          description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
+          default: "lights: dim"
+          selector:
+            select:
+              options:
+                - "lights: dim"
+                - "lights: color temp and color hue"
+                - "lights: color temp only"
+                - "lights: color hue only"
+                - "media: volume control"
+                - "dynamic: choisir via input_select"
+                - "user defined"
 
-      scroll_wheel_mode_dynamic_ch2:
-        name: "Canal 2 : Sélecteur dynamique du mode molette"
-        description: |
-          Pour le mode molette <dynamique> uniquement, laisser vide sinon.
-        default: !
-        selector:
-          entity:
-            filter:
-              domain:
-                - input_select
+        scroll_wheel_mode_dynamic_ch2:
+          name: "Canal 2 : Sélecteur dynamique du mode molette"
+          description: |
+            Pour le mode molette <dynamique> uniquement, laisser vide sinon.
+          default: !
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_select
 
-      scroll_wheel_mode_ext_ch2:
-        name: "Canal 2 : Mode d’évaluation de la molette"
-        description: |
-          <relaxed> : une seule action après défilement
-          <instant> : plusieurs actions pendant le défilement
-        default: "relaxed"
-        selector:
-          select:
-            options:
-              - "relaxed"
-              - "instant"
+        scroll_wheel_mode_ext_ch2:
+          name: "Canal 2 : Mode d’évaluation de la molette"
+          description: |
+            <relaxed> : une seule action après défilement
+            <instant> : plusieurs actions pendant le défilement
+          default: "relaxed"
+          selector:
+            select:
+              options:
+                - "relaxed"
+                - "instant"
 
-      scroll_wheel_user_action_ch2:
-        name: "Canal 2 : Action molette définie par l’utilisateur"
-        description: |
-          Pour mode molette <défini par l’utilisateur> uniquement
-        default: []
-        selector:
-          action: {}
+        scroll_wheel_user_action_ch2:
+          name: "Canal 2 : Action molette définie par l’utilisateur"
+          description: |
+            Pour mode molette <défini par l’utilisateur> uniquement
+          default: []
+          selector:
+            action: {}
 
-  # ————————————————————————
-  # CANAL 3 (mêmes options que Canal 1 et 2)
-  channel3_section:
-    name: Canal 3
-    collapsed: true
-    input:
-      click_action_ch3:
-        name: "Canal 3 : action clic"
-        default: []
-        selector:
-          action: {}
-      double_click_action_ch3:
-        name: "Canal 3 : action double clic"
-        default: []
-        selector:
-          action: {}
-      triple_click_action_ch3:
-        name: "Canal 3 : action triple clic"
-        default: []
-        selector:
-          action: {}
-      long_click_action_ch3:
-        name: "Canal 3 : action long clic"
-        default: []
-        selector:
-          action: {}
-      on_hold_action_ch3:
-        name: "Canal 3 : action appui maintenu"
-        description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
-        default: []
-        selector:
-          action: {}
+    # ————————————————————————
+    # CANAL 3 (mêmes options que Canal 1 et 2)
+    channel3_section:
+      name: Canal 3
+      collapsed: true
+      input:
+        click_action_ch3:
+          name: "Canal 3 : action clic"
+          default: []
+          selector:
+            action: {}
+        double_click_action_ch3:
+          name: "Canal 3 : action double clic"
+          default: []
+          selector:
+            action: {}
+        triple_click_action_ch3:
+          name: "Canal 3 : action triple clic"
+          default: []
+          selector:
+            action: {}
+        long_click_action_ch3:
+          name: "Canal 3 : action long clic"
+          default: []
+          selector:
+            action: {}
+        on_hold_action_ch3:
+          name: "Canal 3 : action appui maintenu"
+          description: "répéter l’action tant que le bouton est maintenu, voir aussi on_hold_delay"
+          default: []
+          selector:
+            action: {}
 
-      scroll_wheel_target_ch3:
-        name: "Canal 3 : Entité contrôlée par la molette"
-        description: |
-          Lumière ou lecteur média à contrôler avec la molette pour le canal 3.
-          Laisser vide si le mode molette est <défini par l’utilisateur>
-        default: []
-        selector:
-          entity:
-            multiple: true
-            filter:
-              domain:
-                - light
-                - media_player
+        scroll_wheel_target_ch3:
+          name: "Canal 3 : Entité contrôlée par la molette"
+          description: |
+            Lumière ou lecteur média à contrôler avec la molette pour le canal 3.
+            Laisser vide si le mode molette est <défini par l’utilisateur>
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                domain:
+                  - light
+                  - media_player
 
-      scroll_wheel_mode_ch3:
-        name: "Canal 3 : Mode molette"
-        description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
-        default: "lights: dim"
-        selector:
-          select:
-            options:
-              - "lights: dim"
-              - "lights: color temp and color hue"
-              - "lights: color temp only"
-              - "lights: color hue only"
-              - "media: volume control"
-              - "dynamic: choisir via input_select"
-              - "user defined"
+        scroll_wheel_mode_ch3:
+          name: "Canal 3 : Mode molette"
+          description: "Sélectionner l’attribut de l’entité cible contrôlé par la molette"
+          default: "lights: dim"
+          selector:
+            select:
+              options:
+                - "lights: dim"
+                - "lights: color temp and color hue"
+                - "lights: color temp only"
+                - "lights: color hue only"
+                - "media: volume control"
+                - "dynamic: choisir via input_select"
+                - "user defined"
 
-      scroll_wheel_mode_dynamic_ch3:
-        name: "Canal 3 : Sélecteur dynamique du mode molette"
-        default: !
-        selector:
-          entity:
-            filter:
-              domain:
-                - input_select
+        scroll_wheel_mode_dynamic_ch3:
+          name: "Canal 3 : Sélecteur dynamique du mode molette"
+          default: !
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_select
 
-      scroll_wheel_mode_ext_ch3:
-        name: "Canal 3 : Mode d’évaluation de la molette"
-        default: "relaxed"
-        selector:
-          select:
-            options:
-              - "relaxed"
-              - "instant"
+        scroll_wheel_mode_ext_ch3:
+          name: "Canal 3 : Mode d’évaluation de la molette"
+          default: "relaxed"
+          selector:
+            select:
+              options:
+                - "relaxed"
+                - "instant"
 
-      scroll_wheel_user_action_ch3:
-        name: "Canal 3 : Action molette définie par l’utilisateur"
-        default: []
-        selector:
-          action: {}
+        scroll_wheel_user_action_ch3:
+          name: "Canal 3 : Action molette définie par l’utilisateur"
+          default: []
+          selector:
+            action: {}
 
-  # ————————————————————————
-  # PARAMÈTRES GLOBAUX
-  global_setting:
-    name: Paramètres globaux
-    collapsed: true
-    input:
+    # ————————————————————————
+    # PARAMÈTRES GLOBAUX
+    global_setting:
+      name: Paramètres globaux
+      collapsed: true
+      input:
 
-      dim_step_pct:
-        name: "Pourcentage de variation de luminosité"
-        description: "Variation de luminosité en %"
-        default: 5
-        selector:
-          number:
-            mode: box
+        dim_step_pct:
+          name: "Pourcentage de variation de luminosité"
+          description: "Variation de luminosité en %"
+          default: 5
+          selector:
+            number:
+              mode: box
 
-      dim_min_pct:
-        name: "Luminosité minimale"
-        description: "Luminosité minimale en %"
-        default: 5
-        selector:
-          number:
-            mode: box
+        dim_min_pct:
+          name: "Luminosité minimale"
+          description: "Luminosité minimale en %"
+          default: 5
+          selector:
+            number:
+              mode: box
 
-      min_color_temp:
-        name: "Température couleur minimale"
-        description: "Température couleur minimale en Kelvin (pour color_temp)"
-        default: 2200
-        selector:
-          number:
-            mode: box
+        min_color_temp:
+          name: "Température couleur minimale"
+          description: "Température couleur minimale en Kelvin (pour color_temp)"
+          default: 2200
+          selector:
+            number:
+              mode: box
 
-      max_color_temp:
-        name: "Température couleur maximale"
-        description: "Température couleur maximale en Kelvin (pour color_temp)"
-        default: 4000
-        selector:
-          number:
-            mode: box
+        max_color_temp:
+          name: "Température couleur maximale"
+          description: "Température couleur maximale en Kelvin (pour color_temp)"
+          default: 4000
+          selector:
+            number:
+              mode: box
 
-      color_temp_step:
-        name: "Pas de température couleur"
-        description: "Variation de température couleur en Kelvin"
-        default: 100
-        selector:
-          number:
-            mode: box
+        color_temp_step:
+          name: "Pas de température couleur"
+          description: "Variation de température couleur en Kelvin"
+          default: 100
+          selector:
+            number:
+              mode: box
 
-      color_hue_step:
-        name: "Pas de teinte couleur"
-        description: "Variation de teinte couleur en degrés (0..360)"
-        default: 4
-        selector:
-          number:
-            mode: box
+        color_hue_step:
+          name: "Pas de teinte couleur"
+          description: "Variation de teinte couleur en degrés (0..360)"
+          default: 4
+          selector:
+            number:
+              mode: box
 
-      color_saturation:
-        name: "Saturation couleur"
-        description: "Saturation couleur en %"
-        default: 100
-        selector:
-          number:
-            mode: box
+        color_saturation:
+          name: "Saturation couleur"
+          description: "Saturation couleur en %"
+          default: 100
+          selector:
+            number:
+              mode: box
 
-      volume_step_pct:
-        name: "Pas de variation de volume média"
-        description: "Variation de volume en %"
-        default: 3.5
-        selector:
-          number:
-            mode: box
+        volume_step_pct:
+          name: "Pas de variation de volume média"
+          description: "Variation de volume en %"
+          default: 3.5
+          selector:
+            number:
+              mode: box
 
-      volume_use_up_down_for_instant:
-        name: "Utiliser volume_up/volume_down pour le mode instantané"
-        description: |
-          En mode <instant>, utiliser les actions volume_up/volume_down plutôt que le step_pct.
-          Si c’est trop fort, désactivez et ajustez le pas de volume jusqu’à avoir des variations fines.
-        default: true
-        selector:
-          boolean: {}
+        volume_use_up_down_for_instant:
+          name: "Utiliser volume_up/volume_down pour le mode instantané"
+          description: |
+            En mode <instant>, utiliser les actions volume_up/volume_down plutôt que le step_pct.
+            Si c’est trop fort, désactivez et ajustez le pas de volume jusqu’à avoir des variations fines.
+          default: true
+          selector:
+            boolean: {}
 
-      volume_max_pct:
-        name: "Volume max pour médias"
-        description: "Volume maximum (%) pour le lecteur média"
-        default: 70
-        selector:
-          number:
-            mode: box
+        volume_max_pct:
+          name: "Volume max pour médias"
+          description: "Volume maximum (%) pour le lecteur média"
+          default: 70
+          selector:
+            number:
+              mode: box
 
-      on_hold_delay:
-        name: "Délai pour appui maintenu"
-        description: "Délai entre deux appels d’action en appui maintenu"
-        default: 0.1
-        selector:
-          number:
-            mode: box
-            step: 0.1
+        on_hold_delay:
+          name: "Délai pour appui maintenu"
+          description: "Délai entre deux appels d’action en appui maintenu"
+          default: 0.1
+          selector:
+            number:
+              mode: box
+              step: 0.1
 
-      max_queued_automation_calls:
-        name: "Appels d’automatisation maximum en file"
-        description: |
-          Augmenter ce nombre si vous voulez accepter plus d’appels d’automatisation en file pour des cas
-          particuliers.
-        default: 10
-        selector:
-          number:
-            mode: box
-            step: 1
+        max_queued_automation_calls:
+          name: "Appels d’automatisation maximum en file"
+          description: |
+            Augmenter ce nombre si vous voulez accepter plus d’appels d’automatisation en file pour des cas
+            particuliers.
+          default: 10
+          selector:
+            number:
+              mode: box
+              step: 1
